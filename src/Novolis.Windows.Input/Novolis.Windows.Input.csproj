@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>Novolis.Windows.Input</RootNamespace>
+    <AssemblyName>Novolis.Windows.Input</AssemblyName>
+    <PackageId>Novolis.Windows.Input</PackageId>
+    <IsPackable>true</IsPackable>
+    <Description>Windows pointer and keyboard input injection primitives.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

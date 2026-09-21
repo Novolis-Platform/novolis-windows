@@ -1,14 +1,10 @@
 <Project>
   
     <PropertyGroup>
-    <NovolisGitHubRepository>novolis-template-dotnet</NovolisGitHubRepository>
+    <NovolisGitHubRepository>novolis-windows</NovolisGitHubRepository>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)build\version.props"
           Condition="Exists('$(MSBuildThisFileDirectory)build\version.props')" />
-<PropertyGroup Label="Local NuGet feed">
-    <NovolisLocalFeed Condition="'$(NovolisLocalFeed)' == ''">$(NOVOLIS_LOCAL_FEED)</NovolisLocalFeed>
-    <NovolisLocalFeed Condition="'$(NovolisLocalFeed)' == ''">$(MSBuildThisFileDirectory)..\artifacts\nuget-local</NovolisLocalFeed>
-  </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>

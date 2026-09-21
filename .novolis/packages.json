@@ -1,1 +1,19 @@
-{"packages":{}}
+{
+  "packages": {
+    "Novolis.Windows.Sessions": {
+      "project": "src/Novolis.Windows.Sessions/Novolis.Windows.Sessions.csproj"
+    },
+    "Novolis.Windows.Input": {
+      "project": "src/Novolis.Windows.Input/Novolis.Windows.Input.csproj"
+    },
+    "Novolis.Windows.Clipboard": {
+      "project": "src/Novolis.Windows.Clipboard/Novolis.Windows.Clipboard.csproj"
+    },
+    "Novolis.Windows.Display": {
+      "project": "src/Novolis.Windows.Display/Novolis.Windows.Display.csproj"
+    },
+    "Novolis.Windows.Audio": {
+      "project": "src/Novolis.Windows.Audio/Novolis.Windows.Audio.csproj"
+    }
+  }
+}

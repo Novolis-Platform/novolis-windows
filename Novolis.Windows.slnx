@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/Novolis.Windows.Audio/">
+    <Project Path="src/Novolis.Windows.Audio/Novolis.Windows.Audio.csproj" />
+  </Folder>
+  <Folder Name="/src/Novolis.Windows.Clipboard/">
+    <Project Path="src/Novolis.Windows.Clipboard/Novolis.Windows.Clipboard.csproj" />
+  </Folder>
+  <Folder Name="/src/Novolis.Windows.Display/">
+    <Project Path="src/Novolis.Windows.Display/Novolis.Windows.Display.csproj" />
+  </Folder>
+  <Folder Name="/src/Novolis.Windows.Input/">
+    <Project Path="src/Novolis.Windows.Input/Novolis.Windows.Input.csproj" />
+  </Folder>
+  <Folder Name="/src/Novolis.Windows.Sessions/">
+    <Project Path="src/Novolis.Windows.Sessions/Novolis.Windows.Sessions.csproj" />
+  </Folder>
+</Solution>
