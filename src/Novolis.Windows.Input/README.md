@@ -11,3 +11,8 @@ before calling this package.
 ```xml
 <PackageReference Include="Novolis.Windows.Input" Version="2026.1.*" />
 ```
+
+## Usage
+
+Use `WindowsInputController` after translating product input into Windows
+coordinates and virtual-key values.

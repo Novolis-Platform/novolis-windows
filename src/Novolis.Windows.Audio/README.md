@@ -10,3 +10,8 @@ wire transport remain product concerns.
 ```xml
 <PackageReference Include="Novolis.Windows.Audio" Version="2026.1.*" />
 ```
+
+## Usage
+
+Start `WindowsLoopbackAudioCapture` from the interactive host and consume
+its PCM data events.

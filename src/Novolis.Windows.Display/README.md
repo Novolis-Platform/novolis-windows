@@ -8,3 +8,7 @@ interactive-session hosts.
 ```xml
 <PackageReference Include="Novolis.Windows.Display" Version="2026.1.*" />
 ```
+
+## Usage
+
+Use `WindowsDisplayTopology` to enumerate monitor bounds and DPI metadata.

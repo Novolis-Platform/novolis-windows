@@ -11,3 +11,8 @@ session and user identity; a host decides how to use that information.
 ```xml
 <PackageReference Include="Novolis.Windows.Sessions" Version="2026.1.*" />
 ```
+
+## Usage
+
+Use `WindowsSessionManager` to query the active interactive session before
+starting session-bound work.
