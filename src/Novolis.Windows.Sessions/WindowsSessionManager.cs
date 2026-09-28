@@ -41,6 +41,63 @@ public sealed class WindowsSessionManager
     }
 
     /// <summary>
+    /// Determines whether the supplied executable is already running in the
+    /// active interactive session.
+    /// </summary>
+    public bool IsProcessRunningInActiveSession(string executablePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
+        var sessionId = TryGetActiveConsoleSessionId();
+        if (sessionId is null)
+            return false;
+
+        var processName = Path.GetFileNameWithoutExtension(executablePath);
+        if (string.IsNullOrWhiteSpace(processName))
+            return false;
+
+        foreach (var process in Process.GetProcessesByName(processName))
+        {
+            using (process)
+            {
+                try
+                {
+                    if (process.SessionId != sessionId.Value)
+                        continue;
+
+                    try
+                    {
+                        var path = process.MainModule?.FileName;
+                        if (string.IsNullOrWhiteSpace(path)
+                            || string.Equals(
+                                Path.GetFullPath(path),
+                                Path.GetFullPath(executablePath),
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                    catch (Win32Exception)
+                    {
+                        // A matching process name and session is sufficient
+                        // when Windows denies access to its module path.
+                        return true;
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // The process exited while it was being inspected.
+                }
+                catch (Win32Exception)
+                {
+                    // The process was not inspectable; continue with peers.
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Starts a helper executable inside the active user's interactive session.
     /// The child is created without a visible console window.
     /// </summary>
@@ -65,11 +122,25 @@ public sealed class WindowsSessionManager
             return false;
         }
 
+        // The packaged Reach launcher is deliberately per-user. When it is
+        // started from the user's startup folder it already runs in the
+        // active interactive session, so starting the helper directly avoids
+        // requiring WTSQueryUserToken/SeTcbPrivilege.
+        if (TryStartInCurrentInteractiveSession(
+                executablePath,
+                arguments,
+                sessionId.Value,
+                out var interactiveErrorCode))
+        {
+            errorCode = 0;
+            return true;
+        }
+
         if (!WtsQueryUserToken(sessionId.Value, out var impersonationToken)
             || impersonationToken == IntPtr.Zero)
         {
             errorCode = Marshal.GetLastWin32Error();
-            var fallbackErrorCode = 0;
+            var fallbackErrorCode = interactiveErrorCode;
             if (errorCode == 1314
                 && TryStartInCurrentInteractiveSession(
                     executablePath,
