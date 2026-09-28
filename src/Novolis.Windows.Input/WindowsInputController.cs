@@ -43,6 +43,19 @@ public sealed class WindowsInputController
         return Send(inputs);
     }
 
+    /// <summary>Injects one pointer button transition without synthesizing its opposite edge.</summary>
+    public bool Button(WindowsPointerButton button, bool isDown)
+    {
+        var flags = button switch
+        {
+            WindowsPointerButton.Left => isDown ? MouseLeftDown : MouseLeftUp,
+            WindowsPointerButton.Right => isDown ? MouseRightDown : MouseRightUp,
+            WindowsPointerButton.Middle => isDown ? MouseMiddleDown : MouseMiddleUp,
+            _ => throw new ArgumentOutOfRangeException(nameof(button)),
+        };
+        return Send([Input.Mouse(flags)]);
+    }
+
     /// <summary>Scrolls the pointer wheel by the requested wheel delta.</summary>
     public bool Scroll(int delta) =>
         Send([Input.Mouse(MouseWheel, unchecked((uint)delta))]);
