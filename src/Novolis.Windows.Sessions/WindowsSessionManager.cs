@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -57,11 +59,30 @@ public sealed class WindowsSessionManager
         }
 
         var sessionId = TryGetActiveConsoleSessionId();
-        if (sessionId is null
-            || !WtsQueryUserToken(sessionId.Value, out var impersonationToken)
+        if (sessionId is null)
+        {
+            errorCode = unchecked((int)0x80070490);
+            return false;
+        }
+
+        if (!WtsQueryUserToken(sessionId.Value, out var impersonationToken)
             || impersonationToken == IntPtr.Zero)
         {
             errorCode = Marshal.GetLastWin32Error();
+            var fallbackErrorCode = 0;
+            if (errorCode == 1314
+                && TryStartInCurrentInteractiveSession(
+                    executablePath,
+                    arguments,
+                    sessionId.Value,
+                    out fallbackErrorCode))
+            {
+                errorCode = 0;
+                return true;
+            }
+
+            if (fallbackErrorCode != 0)
+                errorCode = fallbackErrorCode;
             return false;
         }
 
@@ -133,6 +154,52 @@ public sealed class WindowsSessionManager
         }
     }
 
+    private static bool TryStartInCurrentInteractiveSession(
+        string executablePath,
+        string arguments,
+        uint sessionId,
+        out int errorCode)
+    {
+        errorCode = 0;
+        if (!Environment.UserInteractive
+            || !ProcessIdToSessionId(GetCurrentProcessId(), out var currentSessionId)
+            || currentSessionId != sessionId)
+        {
+            return false;
+        }
+
+        try
+        {
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = executablePath,
+                Arguments = arguments,
+                WorkingDirectory = Path.GetDirectoryName(executablePath),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+            });
+            if (process is null)
+            {
+                errorCode = unchecked((int)0x80004005);
+                return false;
+            }
+
+            process.Dispose();
+            return true;
+        }
+        catch (Win32Exception exception)
+        {
+            errorCode = exception.NativeErrorCode;
+            return false;
+        }
+        catch (Exception)
+        {
+            errorCode = unchecked((int)0x80004005);
+            return false;
+        }
+    }
+
     private static string? QueryString(uint sessionId, WtsInfoClass infoClass)
     {
         if (!WtsQuerySessionInformation(
@@ -179,10 +246,16 @@ public sealed class WindowsSessionManager
         }
     }
 
-    [DllImport("kernel32.dll")]
+    [DllImport(
+        "kernel32.dll",
+        EntryPoint = "WTSGetActiveConsoleSessionId")]
     private static extern uint WtsGetActiveConsoleSessionId();
 
-    [DllImport("Wtsapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport(
+        "Wtsapi32.dll",
+        EntryPoint = "WTSQuerySessionInformationW",
+        CharSet = CharSet.Unicode,
+        SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool WtsQuerySessionInformation(
         uint server,
@@ -191,10 +264,13 @@ public sealed class WindowsSessionManager
         out IntPtr buffer,
         out uint byteCount);
 
-    [DllImport("Wtsapi32.dll")]
+    [DllImport("Wtsapi32.dll", EntryPoint = "WTSFreeMemory")]
     private static extern void WtsFreeMemory(IntPtr buffer);
 
-    [DllImport("Wtsapi32.dll", SetLastError = true)]
+    [DllImport(
+        "Wtsapi32.dll",
+        EntryPoint = "WTSQueryUserToken",
+        SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool WtsQueryUserToken(uint sessionId, out IntPtr token);
 
@@ -237,6 +313,15 @@ public sealed class WindowsSessionManager
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ProcessIdToSessionId(
+        uint processId,
+        out uint sessionId);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentProcessId();
 
     private const uint TokenAllAccess = 0x000F01FF;
     private const int SecurityImpersonation = 2;
