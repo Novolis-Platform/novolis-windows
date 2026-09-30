@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>Novolis.Windows.Pdf</RootNamespace>
+    <PackageId>Novolis.Windows.Pdf</PackageId>
+    <IsPackable>true</IsPackable>
+    <Description>Windows user-space PDF activation and current-user file association helpers.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <LibraryReference Include="Novolis.Pdf.Platform" />
+  </ItemGroup>
+</Project>

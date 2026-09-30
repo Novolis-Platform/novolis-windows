@@ -14,4 +14,7 @@
   <Folder Name="/src/Novolis.Windows.Sessions/">
     <Project Path="src/Novolis.Windows.Sessions/Novolis.Windows.Sessions.csproj" />
   </Folder>
+  <Folder Name="/src/Novolis.Windows.Pdf/">
+    <Project Path="src/Novolis.Windows.Pdf/Novolis.Windows.Pdf.csproj" />
+  </Folder>
 </Solution>
