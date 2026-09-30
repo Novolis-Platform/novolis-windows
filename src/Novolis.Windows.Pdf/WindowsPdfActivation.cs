@@ -10,14 +10,14 @@ public static class WindowsPdfActivation
     public static PdfOpenRequest? TryCreateRequest(IEnumerable<string> arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);
-        var path = arguments
+        var parts = arguments
             .Select(static value => value.Trim().Trim('"'))
-            .FirstOrDefault(static value => IsPdf(value) && File.Exists(value));
-        if (path is null)
+            .Where(static value => value.Length > 0)
+            .ToArray();
+        if (FindExistingPdf(parts) is not { } path)
             return null;
 
-        var fullPath = Path.GetFullPath(path);
-        return CreateLocalFileRequest(fullPath);
+        return CreateLocalFileRequest(Path.GetFullPath(path));
     }
 
     /// <summary>Creates a request for a local PDF path selected by the host.</summary>
@@ -55,6 +55,28 @@ public static class WindowsPdfActivation
         new(
             (descriptor ?? throw new ArgumentNullException(nameof(descriptor))).Normalize(),
             openReadAsync ?? throw new ArgumentNullException(nameof(openReadAsync)));
+
+    private static string? FindExistingPdf(IReadOnlyList<string> parts)
+    {
+        foreach (var part in parts)
+        {
+            if (IsPdf(part) && File.Exists(part))
+                return part;
+        }
+
+        for (var start = 0; start < parts.Count; start++)
+        {
+            var combined = parts[start];
+            for (var end = start + 1; end < parts.Count; end++)
+            {
+                combined = $"{combined} {parts[end]}";
+                if (IsPdf(combined) && File.Exists(combined))
+                    return combined;
+            }
+        }
+
+        return null;
+    }
 
     private static bool IsPdf(string? path) =>
         !string.IsNullOrWhiteSpace(path)
