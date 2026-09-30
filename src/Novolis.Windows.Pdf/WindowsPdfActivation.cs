@@ -1,33 +1,11 @@
-using Microsoft.Windows.AppLifecycle;
 using Novolis.Pdf.Abstractions;
 using Novolis.Pdf.Platform;
-using Windows.ApplicationModel.Activation;
-using Windows.Storage;
 
 namespace Novolis.Windows.Pdf;
 
 /// <summary>Converts Windows file activation into platform-neutral PDF requests.</summary>
 public static class WindowsPdfActivation
 {
-    /// <summary>Creates a request from a Windows file activation, if it contains a PDF.</summary>
-    public static PdfOpenRequest? TryCreateRequest(AppActivationArguments? activation)
-    {
-        if (activation?.Kind != ExtendedActivationKind.File
-            || activation.Data is not IFileActivatedEventArgs fileArgs
-            || fileArgs.Files.OfType<StorageFile>().FirstOrDefault() is not { } file
-            || !IsPdf(file.Name))
-            return null;
-
-        return new PdfOpenRequest(
-            new PdfSourceDescriptor(file.Name, file.Path),
-            async cancellationToken =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var randomAccessStream = await file.OpenAsync(FileAccessMode.Read);
-                return randomAccessStream.AsStreamForRead();
-            });
-    }
-
     /// <summary>Creates a request from a command-line PDF path, if present.</summary>
     public static PdfOpenRequest? TryCreateRequest(IEnumerable<string> arguments)
     {
@@ -39,6 +17,16 @@ public static class WindowsPdfActivation
             return null;
 
         var fullPath = Path.GetFullPath(path);
+        return CreateLocalFileRequest(fullPath);
+    }
+
+    /// <summary>Creates a request for a local PDF path selected by the host.</summary>
+    public static PdfOpenRequest CreateLocalFileRequest(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        if (!IsPdf(fullPath))
+            throw new ArgumentException("The selected file is not a PDF.", nameof(path));
         return new PdfOpenRequest(
             new PdfSourceDescriptor(
                 Path.GetFileName(fullPath),
@@ -59,6 +47,14 @@ public static class WindowsPdfActivation
                 return ValueTask.FromResult(stream);
             });
     }
+
+    /// <summary>Creates a request around a host-provided Windows stream.</summary>
+    public static PdfOpenRequest CreateRequest(
+        PdfSourceDescriptor descriptor,
+        Func<CancellationToken, ValueTask<Stream>> openReadAsync) =>
+        new(
+            (descriptor ?? throw new ArgumentNullException(nameof(descriptor))).Normalize(),
+            openReadAsync ?? throw new ArgumentNullException(nameof(openReadAsync)));
 
     private static bool IsPdf(string? path) =>
         !string.IsNullOrWhiteSpace(path)
