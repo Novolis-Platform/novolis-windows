@@ -5,7 +5,9 @@ namespace Novolis.Windows.Audio;
 /// <summary>Captures the default render endpoint through WASAPI loopback.</summary>
 public sealed class WindowsLoopbackAudioCapture : IAsyncDisposable
 {
+#pragma warning disable CS0618
     private WasapiLoopbackCapture? _capture;
+#pragma warning restore CS0618
 
     /// <summary>Raised for each captured PCM block.</summary>
     public event EventHandler<WaveInEventArgs>? DataAvailable;
@@ -22,7 +24,9 @@ public sealed class WindowsLoopbackAudioCapture : IAsyncDisposable
         if (_capture is not null)
             return;
 
+#pragma warning disable CS0618
         var capture = new WasapiLoopbackCapture();
+#pragma warning restore CS0618
         capture.DataAvailable += OnDataAvailable;
         capture.RecordingStopped += OnStopped;
         _capture = capture;

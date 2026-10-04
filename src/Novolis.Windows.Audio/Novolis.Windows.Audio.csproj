@@ -7,6 +7,7 @@
     <PackageId>Novolis.Windows.Audio</PackageId>
     <IsPackable>true</IsPackable>
     <Description>Windows WASAPI loopback capture for interactive session hosts.</Description>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
